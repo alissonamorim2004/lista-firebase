@@ -1,0 +1,121 @@
+<div id="app">
+    <h2>{{ title }}</h2>
+
+    <input id="newNotes" />&nbsp;
+    <button @click="addNewNotes()">Add Notes </button>
+    <p v-for="note in notes">
+
+        <b>* {{note.description}} </b>&nbsp;
+
+        <button @click="deleteNotes(note.id)">Delete Notes </button>
+    </p>
+
+
+</div>
+
+
+
+<script src="firebaseConfig.js"></script>
+<script type="module">
+    import { createApp, } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'
+    import { getFirestore, getDocs, collection, addDoc, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js'
+
+    const app = initializeApp(firebaseConfig);
+    var db = getFirestore(app);
+
+
+
+    createApp({
+        data() {
+            return {
+                title: 'TodoApp!',
+                notes: []
+            }
+        },
+        methods: {
+            async refreshData() {
+                this.notes = [];
+                var querySnaphot = await getDocs(collection(db, "notes"));
+                querySnaphot.forEach((doc) => {
+                    this.notes.push({ description: doc.data().description, id: doc.id });
+                });
+                console.log(this.notes);
+            },
+
+            async addNewNotes() {
+                var newNotes = document.getElementById("newNotes").value;
+                await addDoc(collection(db, "notes"), { description: newNotes });
+                this.refreshData();
+            },
+
+
+            async deleteNotes(id) {
+                await deleteDoc(doc(db, "notes", id));
+                this.refreshData();
+            }
+        },
+        mounted: function () {
+            this.refreshData();
+        }
+    }).mount('#app')
+</script>
+
+<style>
+    body {
+        background-color: #292727;
+        font-family: Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    #app {
+    max-width: 600px;
+    width: 100%;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 10px rgba(255, 255, 255, 0.957);
+}
+
+    h2 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    input {
+        padding: 10px;
+        margin-right: 10px;
+        width: 60%;
+    }
+
+    button {
+        padding: 10px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    p {
+        margin-bottom: 10px;
+        background-color: #f9f9f9;
+        padding: 10px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .note-description {
+        flex-grow: 1;
+        margin-right: 10px;
+    }
+
+    .delete-button {
+        background-color: #f44336;
+    }
+</style>
